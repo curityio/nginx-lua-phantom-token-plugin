@@ -20,8 +20,3 @@ then
   echo "Problem encountered starting Kong"
   exit 1
 fi
-
-#
-# Now run this command to see a 401 access denied returned by the gateway
-# Then view logs/error.log for details of the failure
-# - curl -H "Authorization: Bearer XXX" http://localhost:8100/api
