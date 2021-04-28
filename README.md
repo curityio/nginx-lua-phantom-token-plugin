@@ -17,6 +17,7 @@ Are there any issues in promoting the open source version in terms of our relati
 
 - brew tap kong/kong
 - brew install kong
+- git clone https://github.com/curityio/kong-phantom-token-plugin-for-review
 - cd plugin
 - luarocks make
 
