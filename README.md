@@ -15,6 +15,8 @@ Are there any issues in promoting the open source version in terms of our relati
 
 ## Install Kong and Build the Plugin
 
+LUA tools are installed with Kong, after which the plugin can be built:
+
 - brew tap kong/kong
 - brew install kong
 - git clone https://github.com/curityio/kong-phantom-token-plugin-for-review
