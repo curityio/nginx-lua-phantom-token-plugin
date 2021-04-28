@@ -1,0 +1,29 @@
+#
+# This file was generated with 'kong config init' 
+#
+
+_format_version: "2.1"
+_transform: true
+
+#
+# Demonstrate how to forward to an internal API running on port 8101
+#
+services:
+- name: demo-api
+  url: http://api.localhost.com:8101/api
+  routes:
+  - name: demo-api-route
+    paths:
+    - /api
+  plugins:
+  - name: cors
+    config: 
+      origins:
+      - https://web.localhost.com
+  - name: phantom-token
+    config:
+      introspection_endpoint: https://localhost:8443/oauth/v2/oauth-introspect
+      client_id: api-gateway-client
+      client_secret: lPStQn9PRzYCJowkSXnr4FypojVhFHau6nqJ1sdkZdMu--pwQ58Qp-quWRsRnRPc
+      token_cache_seconds: 900
+      scope: transactions
