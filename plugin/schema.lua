@@ -1,5 +1,3 @@
-local url = require "socket.url"
-
 return {
     name = "phantom-token",
     fields = {{
