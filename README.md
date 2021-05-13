@@ -12,7 +12,7 @@ This repository is documented in the [Kong Open Source API Gateway Integration](
 
 ## Credits
 
-This repo used some Kong / LUA techniques from [Vasiliy Malyavin's solution](https://github.com/vmalyavin/kong-token-introspection).
+This repo used some Kong / LUA techniques from [Vasiliy Malyavin's solution](https://github.com/vmalyavin/kong-token-introspection).\
 We then adapted the code to fit with Curity's design recommendations for securing APIs.
 
 ## More Information
