@@ -1,53 +1,20 @@
-# Overview
+# Kong Phantom Token Plugin
 
-An initial repository for review, so that we can decide deliverables of value.
+[![Quality](https://img.shields.io/badge/quality-experiment-red)](https://curity.io/resources/code-examples/status/)
+[![Availability](https://img.shields.io/badge/availability-source-blue)](https://curity.io/resources/code-examples/status/)
 
-## Ideas
+A demo level plugin to show how to implement the [Phantom Token Pattern](https://curity.io/resources/learn/phantom-token-pattern/) via LUA.\
+This enables a secure API solution for integrating with the open source version of the Kong API Gateway.
 
-- I think Kong Open Source is quite a bit more developer friendly than NGINX
-- LUA is quite a nice high level technology with good extensibility
-- Kong has a built in cache that can be useful
-- This repository might make a good basis for an article
+## Documentation
 
-## Kong Open Source
+This repository is documented in the [Kong Open Source API Gateway Integration](https://curity.io/resources/learn/integration-kong-open-source/) article on the Curity Web Site.
 
-Are there any issues in promoting the open source version in terms of our relationship with Kong?
+## Credits
 
-## Install Kong and Build the Plugin
+This repo used some Kong / LUA techniques from [Vasiliy Malyavin's solution](https://github.com/vmalyavin/kong-token-introspection).
+We then adapted the code to fit with Curity's design recommendations for securing APIs.
 
-LUA tools are installed with Kong, after which the plugin can be built:
+## More Information
 
-- brew tap kong/kong
-- brew install kong
-- git clone https://github.com/curityio/kong-phantom-token-plugin-for-review
-- cd plugin
-- luarocks make
-
-This will deploy lua files under this location on my MacBook:
-
-- /usr/local/Cellar/openresty@1.17.8.2/1.17.8.2/luarocks/share/lua/5.1/kong/plugins
-
-## Running the Gateway + Phantom Token Plugin Locally
-
-This sample uses the simplest developer option with no database and declarative config:
-
-- cd local
-- ./start.sh
-
-Next send a bad token to the API gateway:
-
-- curl -H "Authorization: Bearer XXX" http://localhost:8100/api
-
-Then view the logged error details:
-
-- cat logs/error.log
-
-## Deploying the Gateway to Kubernetes
-
-I will add some notes on this later, which involves these steps:
-
-- Deploy Kong via its Helm Chart
-- Use the Helm values file to specify API routes
-- Supply the plugin as a Config Map
-- Expose the gateway via an ingress over port 443
-
+Please visit [curity.io](https://curity.io/) for more information about the Curity Identity Server.

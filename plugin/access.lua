@@ -23,7 +23,7 @@ function _M.run(conf)
         _M.invalid_token_error_response()
     end
 
-    local res = _M.introspect_access_token(access_token)
+    local res = _M.verify_access_token(access_token)
     local jwt = res.body
 
     if not _M.is_scope_authorized(jwt) then
@@ -37,13 +37,13 @@ end
 --
 -- Get the access token from the cache or introspect it is not found
 --
-function _M.introspect_access_token(access_token)
+function _M.verify_access_token(access_token)
     
     local cache_id = "at:" .. access_token
     local res, err = kong.cache:get(
         cache_id,
         { ttl = _M.conf.token_cache_seconds },
-        _M.introspect_access_token_req,
+        _M.introspect_access_token,
         access_token)
 
     if err then
@@ -79,7 +79,7 @@ end
 --
 -- Do the work of calling the introspection endpoint
 --
-function _M.introspect_access_token_req(access_token)
+function _M.introspect_access_token(access_token)
 
     local httpc = http:new()
 
