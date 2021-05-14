@@ -10,11 +10,6 @@ This enables a secure API solution for integrating with the open source version 
 
 This repository is documented in the [Kong Open Source API Gateway Integration](https://curity.io/resources/learn/integration-kong-open-source/) article on the Curity Web Site.
 
-## Credits
-
-This repo used some Kong / LUA techniques from [Vasiliy Malyavin's solution](https://github.com/vmalyavin/kong-token-introspection).\
-We then adapted the code to fit with Curity's design recommendations for securing APIs.
-
 ## More Information
 
 Please visit [curity.io](https://curity.io/) for more information about the Curity Identity Server.
