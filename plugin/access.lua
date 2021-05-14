@@ -4,87 +4,32 @@ local pl_stringx = require "pl.stringx"
 local jwt_parser = require "kong.plugins.jwt.jwt_parser"
 
 --
--- The plugin entry point to introspect the token then forward the JWT to the API
+-- Return errors due to invalid tokens or introspection technical problems
 --
-function _M.run(conf)
+local function error_response(status, code, message)
 
-    _M.conf = conf
-    if ngx.req.get_method() == "OPTIONS" then
-        return
-    end
-
-    local access_token = ngx.req.get_headers()["Authorization"]
-    if access_token then
-        access_token = pl_stringx.replace(access_token, "Bearer ", "", 1)
-    end
-
-    if not access_token then
-        ngx.log(ngx.WARN, "No access token was found in the Authorization bearer header")
-        _M.invalid_token_error_response()
-    end
-
-    local res = _M.verify_access_token(access_token)
-    local jwt = res.body
-
-    if not _M.is_scope_authorized(jwt) then
-        _M.error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the scope required for this API operation")
-    end
-
-    ngx.log(ngx.INFO, "The request was successfully authorized by the gateway")
-    ngx.req.set_header("Authorization", "Bearer " .. jwt)
+    local jsonData = '{"code":"' .. code .. '", "message":"' .. message .. '"}'
+    ngx.status = status
+    ngx.header['content-type'] = 'application/json'
+    ngx.say(jsonData)
+    ngx.exit(status)
 end
 
 --
--- Get the access token from the cache or introspect it is not found
+-- Return a generic message for all three of these error categories
 --
-function _M.verify_access_token(access_token)
-    
-    local cache_id = "at:" .. access_token
-    local res, err = kong.cache:get(
-        cache_id,
-        { ttl = _M.conf.token_cache_seconds },
-        _M.introspect_access_token,
-        access_token)
-
-    if err then
-        local cacheMessage = "A technical problem occurred during cache access"
-        ngx.log(ngx.WARN, cacheMessage .. err)
-        _M.error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "cache_error", cacheMessage)
-    end 
-
-    if res.status ~= 200 then
-        kong.cache:invalidate(cache_id)
-    end
-
-    if res.status == 204 then
-        ngx.log(ngx.WARN, "The access token received a " .. res.status .. " introspection response and is expired")
-        _M.invalid_token_error_response()
-    end
-
-    if res.status ~= 200 then
-
-        local introspectionMessage = "A technical problem occurred during access token introspection"
-        local logMessage = introspectionMessage .. ", Status: " .. res.status
-        if res.body then
-            logMessage = logMessage .. ", Body: " .. res.body
-        end
-        ngx.log(ngx.WARN, logMessage)
-
-        _M.error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "introspection_error", introspectionMessage)
-    end
-
-    return res
+local function invalid_token_error_response()
+    error_response(ngx.HTTP_UNAUTHORIZED, "unauthorized", "Missing, invalid or expired access token")
 end
 
 --
 -- Do the work of calling the introspection endpoint
 --
-function _M.introspect_access_token(access_token)
+local function introspect_access_token(access_token, config)
 
     local httpc = http:new()
-
-    local introspectCredentials = ngx.encode_base64(_M.conf.client_id .. ":" .. _M.conf.client_secret)
-    local res, err = httpc:request_uri(_M.conf.introspection_endpoint, {
+    local introspectCredentials = ngx.encode_base64(config.client_id .. ":" .. config.client_secret)
+    local res, err = httpc:request_uri(config.introspection_endpoint, {
         method = "POST",
         body = "token=" .. access_token,
         headers = { 
@@ -118,9 +63,9 @@ end
 --
 -- Check for a required scope if configured
 --
-function _M.is_scope_authorized(jwt_text)
+local function verify_scope(jwt_text, required_scope)
     
-    if _M.conf.scope == nil then
+    if required_scope == nil then
         return true
     end
 
@@ -130,37 +75,88 @@ function _M.is_scope_authorized(jwt_text)
         return false
     end
 
-    local scope = data.claims.scope
-    local needed_scope = pl_stringx.strip(_M.conf.scope)
-    if string.len(needed_scope) == 0 then
-        return true
-    end
-
-    scope = pl_stringx.strip(scope)
-    if string.find(scope, '*', 1, true) or string.find(scope, needed_scope, 1, true) then
-        return true
+    local scope_values = pl_stringx.split(data.claims.scope, " ")
+    for id, scope in ipairs(scope_values) do
+        if scope == required_scope then
+            return true
+        end
     end
 
     return false
 end
 
 --
--- Return a generic message for all three of these error categories
+-- Get the access token from the cache or introspect the token if not found
+-- We use the access_token value as the cache key
+-- Note also that we pass two arguments to the introspect_access_token callback
 --
-function _M.invalid_token_error_response()
-    _M.error_response(ngx.HTTP_UNAUTHORIZED, "unauthorized", "Missing, invalid or expired access token")
+local function verify_access_token(access_token, config)
+    
+    local res, err = kong.cache:get(
+        access_token,
+        { ttl = config.token_cache_seconds },
+        introspect_access_token,
+        access_token,
+        config)
+
+    if err then
+        local cacheMessage = "A technical problem occurred during cache access"
+        ngx.log(ngx.WARN, cacheMessage .. err)
+        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "cache_error", cacheMessage)
+    end 
+
+    if res.status ~= 200 then
+        kong.cache:invalidate(access_token)
+    end
+
+    if res.status == 204 then
+        ngx.log(ngx.WARN, "Received a " .. res.status .. " introspection response due to the access token being invalid or expired")
+        invalid_token_error_response()
+    end
+
+    if res.status ~= 200 then
+
+        local introspectionMessage = "A technical problem occurred during access token introspection"
+        local logMessage = introspectionMessage .. ", Status: " .. res.status
+        if res.body then
+            logMessage = logMessage .. ", Body: " .. res.body
+        end
+        ngx.log(ngx.WARN, logMessage)
+
+        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "introspection_error", introspectionMessage)
+    end
+
+    return res
 end
 
 --
--- Return errors due to invalid tokens or introspection technical problems
+-- The public entry point to introspect the token then forward the JWT to the API
 --
-function _M.error_response(status, code, message)
+function _M.run(config)
 
-    local jsonData = '{"code":"' .. code .. '", "message":"' .. message .. '"}'
-    ngx.status = status
-    ngx.header['content-type'] = 'application/json'
-    ngx.say(jsonData)
-    ngx.exit(status)
+    if ngx.req.get_method() == "OPTIONS" then
+        return
+    end
+
+    local access_token = ngx.req.get_headers()["Authorization"]
+    if access_token then
+        access_token = pl_stringx.replace(access_token, "Bearer ", "", 1)
+    end
+
+    if not access_token then
+        ngx.log(ngx.WARN, "No access token was found in the Authorization bearer header")
+        invalid_token_error_response()
+    end
+
+    local res = verify_access_token(access_token, config)
+    local jwt = res.body
+
+    if not verify_scope(jwt, config.scope) then
+        error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the required scope: " .. config.scope)
+    end
+
+    ngx.log(ngx.INFO, "The request was successfully authorized by the gateway")
+    ngx.req.set_header("Authorization", "Bearer " .. jwt)
 end
 
 return _M
