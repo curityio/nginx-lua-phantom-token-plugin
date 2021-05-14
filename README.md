@@ -3,8 +3,8 @@
 [![Quality](https://img.shields.io/badge/quality-experiment-red)](https://curity.io/resources/code-examples/status/)
 [![Availability](https://img.shields.io/badge/availability-source-blue)](https://curity.io/resources/code-examples/status/)
 
-A demo level plugin to show how to implement the [Phantom Token Pattern](https://curity.io/resources/learn/phantom-token-pattern/) via LUA.\
-This enables a secure API solution for integrating with the open source version of the Kong API Gateway.
+A plugin to demonstrate how to implement the [Phantom Token Pattern](https://curity.io/resources/learn/phantom-token-pattern/) via LUA.\
+This enables a secure API solution when integrating with the open source version of the Kong API Gateway.
 
 ## Documentation
 
