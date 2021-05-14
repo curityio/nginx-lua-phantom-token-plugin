@@ -75,24 +75,20 @@ local function verify_scope(jwt_text, required_scope)
         return false
     end
 
-    local scope = data.claims.scope
-    local needed_scope = pl_stringx.strip(required_scope)
-    if string.len(needed_scope) == 0 then
-        return true
-    end
-
-    scope = pl_stringx.strip(scope)
-    if string.find(scope, '*', 1, true) or string.find(scope, needed_scope, 1, true) then
-        return true
+    local scope_values = pl_stringx.split(data.claims.scope, " ")
+    for id, scope in ipairs(scope_values) do
+        if scope == required_scope then
+            return true
+        end
     end
 
     return false
 end
 
 --
--- Get the access token from the cache or introspect it is not found
+-- Get the access token from the cache or introspect the token if not found
 -- We use the access_token value as the cache key
--- Note that we pass two arguments to the introspect_access_token callback
+-- Note also that we pass two arguments to the introspect_access_token callback
 --
 local function verify_access_token(access_token, config)
     
@@ -156,7 +152,7 @@ function _M.run(config)
     local jwt = res.body
 
     if not verify_scope(jwt, config.scope) then
-        error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the scope required for this API operation")
+        error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the required scope: " .. config.scope)
     end
 
     ngx.log(ngx.INFO, "The request was successfully authorized by the gateway")
