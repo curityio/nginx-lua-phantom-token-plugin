@@ -36,7 +36,8 @@ local function introspect_access_token(access_token, config)
             ["authorization"] = "Basic " .. introspectCredentials,
             ["content-type"] = "application/x-www-form-urlencoded",
             ["accept"] = "application/jwt"
-        }
+        },
+        ssl_verify = config.verify_ssl
     })
 
     if err then
