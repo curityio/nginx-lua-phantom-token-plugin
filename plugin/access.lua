@@ -6,11 +6,17 @@ local jwt_parser = require "kong.plugins.jwt.jwt_parser"
 --
 -- Return errors due to invalid tokens or introspection technical problems
 --
-local function error_response(status, code, message)
+local function error_response(status, code, message, config)
 
     local jsonData = '{"code":"' .. code .. '", "message":"' .. message .. '"}'
     ngx.status = status
     ngx.header['content-type'] = 'application/json'
+
+    if config.cors_origin then
+        ngx.header['Access-Control-Allow-Origin'] = config.cors_origin
+        ngx.header['Access-Control-Allow-Credentials'] = 'true'
+    end
+    
     ngx.say(jsonData)
     ngx.exit(status)
 end
@@ -18,8 +24,8 @@ end
 --
 -- Return a generic message for all three of these error categories
 --
-local function invalid_token_error_response()
-    error_response(ngx.HTTP_UNAUTHORIZED, "unauthorized", "Missing, invalid or expired access token")
+local function invalid_token_error_response(config)
+    error_response(ngx.HTTP_UNAUTHORIZED, "unauthorized", "Missing, invalid or expired access token", config)
 end
 
 --
@@ -103,7 +109,7 @@ local function verify_access_token(access_token, config)
     if err then
         local cacheMessage = "A technical problem occurred during cache access"
         ngx.log(ngx.WARN, cacheMessage .. err)
-        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "cache_error", cacheMessage)
+        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "cache_error", cacheMessage, config)
     end 
 
     if res.status ~= 200 then
@@ -112,7 +118,7 @@ local function verify_access_token(access_token, config)
 
     if res.status == 204 then
         ngx.log(ngx.WARN, "Received a " .. res.status .. " introspection response due to the access token being invalid or expired")
-        invalid_token_error_response()
+        invalid_token_error_response(config)
     end
 
     if res.status ~= 200 then
@@ -124,7 +130,7 @@ local function verify_access_token(access_token, config)
         end
         ngx.log(ngx.WARN, logMessage)
 
-        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "introspection_error", introspectionMessage)
+        error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, "introspection_error", introspectionMessage, config)
     end
 
     return res
@@ -146,14 +152,14 @@ function _M.run(config)
 
     if not access_token then
         ngx.log(ngx.WARN, "No access token was found in the Authorization bearer header")
-        invalid_token_error_response()
+        invalid_token_error_response(config)
     end
 
     local res = verify_access_token(access_token, config)
     local jwt = res.body
 
     if not verify_scope(jwt, config.scope) then
-        error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the required scope: " .. config.scope)
+        error_response(ngx.HTTP_FORBIDDEN, "forbidden", "The token does not contain the required scope: " .. config.scope, config)
     end
 
     ngx.log(ngx.INFO, "The request was successfully authorized by the gateway")
