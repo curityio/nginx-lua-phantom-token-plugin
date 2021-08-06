@@ -14,7 +14,6 @@ local function error_response(status, code, message, config)
 
     if config.cors_origin then
         ngx.header['Access-Control-Allow-Origin'] = config.cors_origin
-        ngx.header['Access-Control-Allow-Credentials'] = 'true'
     end
     
     ngx.say(jsonData)
