@@ -3,6 +3,16 @@ local http = require "resty.http"
 local pl_stringx = require "pl.stringx"
 local jwt_parser = require "kong.plugins.jwt.jwt_parser"
 
+local function array_has_value(arr, val)
+    for index, value in ipairs(arr) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
+
 --
 -- Return errors due to invalid tokens or introspection technical problems
 --
@@ -12,9 +22,13 @@ local function error_response(status, code, message, config)
     ngx.status = status
     ngx.header['content-type'] = 'application/json'
 
-    if config.cors_origin then
-        ngx.header['Access-Control-Allow-Origin'] = config.cors_origin
-        ngx.header['Access-Control-Allow-Credentials'] = 'true'
+    if config.trusted_web_origins then
+
+        local origin = ngx.req.get_headers()["origin"]
+        if origin and array_has_value(config.trusted_web_origins, origin) then
+            ngx.header['Access-Control-Allow-Origin'] = origin
+            ngx.header['Access-Control-Allow-Credentials'] = 'true'
+        end
     end
     
     ngx.say(jsonData)
