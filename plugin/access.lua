@@ -150,6 +150,9 @@ local function verify_access_token(access_token, config)
     return res
 end
 
+local function starts_with(str, start)
+    return str:sub(1, #start) == start
+ end
 --
 -- The public entry point to introspect the token then forward the JWT to the API
 --
@@ -166,6 +169,11 @@ function _M.run(config)
 
     if not access_token then
         ngx.log(ngx.WARN, "No access token was found in the Authorization bearer header")
+        invalid_token_error_response(config)
+    end
+
+    if not starts_with(access_token,config.token_prefix) then
+        ngx.log(ngx.WARN, "Access token prefix not found  ")
         invalid_token_error_response(config)
     end
 
