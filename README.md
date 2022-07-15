@@ -47,6 +47,7 @@ Also add the plugin to the `KONG_PLUGINS` environment variable, by setting it to
 | client_id | Yes | The ID of the introspection client configured in the Curity Identity Server |
 | client_secret | Yes | The secret of the introspection client configured in the Curity Identity Server |
 | scope | No | One or more scopes can be required for the location, such as `read write` |
+| token_prefix | No | Only tokens starting with the given prefix will trigger introspection |
 | trusted_web_origins | No | For browser clients, trusted origins can be configured, so that plugin error responses are readable by Javascript code running in browsers |
 | verify_ssl | No | An override that can be set to `false` if using untrusted server certificates in the Curity Identity Server. Alternatively you can specify trusted CA certificates via the `lua_ssl_trusted_certificate` directive. See [lua_resty_http](https://github.com/ledgetech/lua-resty-http#request_uri) for further details. |
 
