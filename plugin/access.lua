@@ -174,7 +174,7 @@ function _M.run(config)
 
     if not starts_with(access_token,config.token_prefix) then
         ngx.log(ngx.WARN, "Access token prefix not found  ")
-        invalid_token_error_response(config)
+        return
     end
 
     local res = verify_access_token(access_token, config)
