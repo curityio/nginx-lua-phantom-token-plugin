@@ -173,7 +173,7 @@ function _M.run(config)
     end
 
     if not starts_with(access_token,config.token_prefix) then
-        ngx.log(ngx.WARN, "Access token prefix not found  ")
+        ngx.log(ngx.INFO, "Access token prefix not found  ")
         return
     end
 
