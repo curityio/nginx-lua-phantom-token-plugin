@@ -120,7 +120,7 @@ location ~ ^/api {
 
 You can apply the plugin to a subset of the API routes, or use the advanced routing features of the reverse proxy.\
 The following Kong configuration is for a use case where a route handles both JWTs and opaque tokens.\
-This might enable a microservice developer to forward a JWT a deployed microservice behind a gateway.
+This might enable a microservice developer to forward a JWT an upstream microservice behind a gateway.
 
 ```yaml
 - name: myapi
