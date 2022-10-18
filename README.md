@@ -20,7 +20,7 @@ It also externalizes introspection and caching from APIs, to keep the API securi
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install kong-phantom-token
+luarocks install kong-phantom-token 2.0.0
 ```
 
 Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/5.1/kong/plugins/phantom-token`.
@@ -30,7 +30,7 @@ Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install lua-resty-phantom-token
+luarocks install lua-resty-phantom-token 2.0.0
 ```
 
 Or deploy the `plugin.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.
@@ -57,8 +57,8 @@ For each API route, configure the plugin using configuration similar to the foll
       token_cache_seconds: 900
 ```
 
-When deploying Kong, set environment variables similar to these.\
-In particular set the values for `KONG_PLUGINS` and `KONG_NGINX_HTTP_LUA_SHARED_DICT`.
+When deploying Kong, set an environment variable to activate the plugin in `KONG_PLUGINS`.\
+Also define a dictionary named phantom-token in `KONG_NGINX_HTTP_LUA_SHARED_DICT`:
 
 ```yaml
 environment:
