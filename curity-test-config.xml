@@ -85,6 +85,10 @@
                             <id>read</id>
                             <description>Custom read scope</description>
                         </scope>
+                        <scope>
+                            <id>write</id>
+                            <description>Custom write scope</description>
+                        </scope>
                     </scopes>
                     <client-store>
                         <config-backed>
@@ -92,6 +96,7 @@
                                 <id>test-client</id>
                                 <secret>secret1</secret>
                                 <scope>read</scope>
+                                <scope>write</scope>
                                 <capabilities>
                                     <client-credentials/>
                                 </capabilities>

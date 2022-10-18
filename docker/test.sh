@@ -1,12 +1,10 @@
 #!/bin/bash
 
-##########################################################################################
-# The plugin depends on infrastructure that cannot easily run on desktop operating systems
-# We therefore run some basic infrastructure tests against a deployed reverse proxy
-##########################################################################################
+##################################################################################
+# A few sanity tests that can be run in order to test with deployed infrastructure
+##################################################################################
 
 API_URL='http://localhost:3000'
-ACCESS_TOKEN='42665300-efe8-419d-be52-07b53e208f46'
 RESPONSE_FILE=response.txt
 
 #
@@ -38,25 +36,51 @@ echo '1. Successfully authenticated the client and retrieved an access token'
 #
 # Verify that a client request without an access token fails with a 401
 #
-echo '2. Testing GET request without an access token ...'
+echo '2. Testing API request without an access token ...'
 HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo "*** GET request without valid access token failed, status: $HTTP_STATUS"
+  echo "*** API request without valid access token failed, status: $HTTP_STATUS"
   exit
 fi
-echo '2. GET request received 401 when no valid access token sent'
+echo '2. API request received 401 when no valid access token was sent'
 
 #
-# Verify that a client request without an access token fails with a 401
+# Verify that a client request with an invalid access token fails with a 401
 #
-echo '3. Testing GET request with a valid access token ...'
+INVALID_ACCESS_TOKEN='42665300-efe8-419d-be52-07b53e208f46'
+echo '3. Testing API request with an invalid access token ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "Authorization: Bearer $INVALID_ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo "*** API request with invalid access token failed, status: $HTTP_STATUS"
+  exit
+fi
+echo '3. API request received 401 when an invalid access token was sent'
+
+#
+# Verify that a client request with a valid access token returns 200
+#
+echo '4. Testing initial API request with a valid access token ...'
 HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -H "Authorization: Bearer $OPAQUE_ACCESS_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** GET request with a valid access token failed, status: $HTTP_STATUS"
+  echo "*** API request with a valid access token failed, status: $HTTP_STATUS"
   exit
 fi
-echo '3. GET request received a valid API response when an opaque access token was sent'
+echo '4. Initial API request received a valid API response'
 
+#
+# Verify that a client request with a valid access token returns 200 when served from the cache
+#
+echo '5. Testing second GET request with a valid access token ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "Authorization: Bearer $OPAQUE_ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo "*** API request with a valid access token failed, status: $HTTP_STATUS"
+  exit
+fi
+echo '5. Second API request received a valid API response'

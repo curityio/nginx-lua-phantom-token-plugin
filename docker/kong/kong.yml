@@ -16,4 +16,3 @@ services:
       client_id: introspection-client
       client_secret: secret2
       token_cache_seconds: 900
-      fred: "hello"

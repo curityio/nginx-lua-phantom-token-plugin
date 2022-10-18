@@ -41,9 +41,13 @@ end
 --
 local function error_response(status, code, message)
 
-    local jsonData = '{"code":"' .. code .. '", "message":"' .. message .. '"}'
+    local jsonData = '{"code":"' .. code .. '","message":"' .. message .. '"}'
     ngx.status = status
     ngx.header['content-type'] = 'application/json'
+
+    if status == 401 then
+        ngx.header['WWW-Authenticate'] = 'Bearer'
+    end
 
     ngx.say(jsonData)
     ngx.exit(status)
@@ -187,7 +191,8 @@ function _M.run(config)
     local auth_header = ngx.req.get_headers()['Authorization']
     if auth_header and string.len(auth_header) > 7 and string.lower(string.sub(auth_header, 1, 7)) == 'bearer ' then
 
-        local access_token = string.sub(auth_header, 8)
+        local access_token_untrimmed = string.sub(auth_header, 8)
+        local access_token = string.gsub(access_token_untrimmed, "%s+", "")
         local result = verify_access_token(access_token, config)
     
         if result.status == 500 then

@@ -118,46 +118,9 @@ location ~ ^/api {
 
 ## Advanced Configurations
 
-The plugin can be configured on a per-route basis and use Kong or NGINX's built-in support for routing.\
-Advanced options such as routing based on a combination of path and header are therefore supported.\
-The following shows an example of bypassing the plugin for API requests with a particular token pattern:
-
-```nginx
-http {
-    map $http_authorization $loc {
-      ~^bearer\s*abc_   loc_bypass;
-      default           loc_phantom_token;
-    }
-    server {
-        listen 80;
-        location ~ ^/api {
-          try_files $uri @$loc;
-        }
-        location @loc_bypass {
-            proxy_pass https://api-internal.example.com:3000;
-        }
-        location @loc_phantom_token {
-            
-            rewrite_by_lua_block {
-
-                local config = {
-                    introspection_endpoint = 'https://login.example.com/oauth/v2/oauth-introspect',
-                    client_id = 'introspection-client',
-                    client_secret = 'Password1',
-                    token_cache_seconds = 900
-                }
-
-                local phantomTokenPlugin = require 'resty.phantom-token'
-                phantomTokenPlugin.execute(config)
-            }
-
-            proxy_pass https://api-internal.example.com:3000;
-        }
-    }
-}
-```
-
-The equivalent configuration for Kong would be done like this:
+You can apply the plugin to a subset of the API routes, or use the advanced routing features of the reverse proxy.\
+The following Kong configuration is for a use case where a route handles both JWTs and opaque tokens.\
+This might enable a microservice developer to forward a JWT a deployed microservice behind a gateway.
 
 ```yaml
 - name: myapi
@@ -167,7 +130,7 @@ The equivalent configuration for Kong would be done like this:
     paths:
     - /api
     headers:
-      authorization: ["~*bearer\\s*abc_"]
+      authorization: ["~*bearer\\s*[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*"]
 
   - name: phantom-token
     paths:
@@ -180,6 +143,8 @@ The equivalent configuration for Kong would be done like this:
         client_secret: Password1
         token_cache_seconds: 900
 ```
+
+The equivalent OpenResty configuration is shown in [these tests](/t/advancedRouting.t).
 
 ## Documentation
 
