@@ -97,6 +97,7 @@
                                 <secret>secret1</secret>
                                 <scope>read</scope>
                                 <scope>write</scope>
+                                <access-token-ttl>300</access-token-ttl>
                                 <capabilities>
                                     <client-credentials/>
                                 </capabilities>

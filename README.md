@@ -35,7 +35,74 @@ luarocks install lua-resty-phantom-token 2.0.0
 
 Or deploy the `plugin.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.
 
-## Configuration
+## Required Configuration Directives
+
+All of the settings in this section are required:
+
+#### introspection_endpoint
+
+> **Syntax**: **`introspection_endpoint`** `string`
+>
+> **Context**: `location`
+
+The URL to the introspection endpoint of the Curity Identity Server.
+
+#### client_id
+
+> **Syntax**: **`client_id`** `string`
+>
+> **Context**: `location`
+
+The ID of the introspection client configured in the Curity Identity Server.
+
+#### client_secret
+
+> **Syntax**: **`client_secret`** `string`
+>
+> **Context**: `location`
+
+The string secret of the introspection client configured in the Curity Identity Server.
+
+## Optional Configuration Directives
+
+#### token_cache_seconds
+
+> **Syntax**: **`token_cache_seconds`** `number`
+>
+> **Context**: `location`
+>
+> **Default**: 300
+
+The maximum time for which introspected JWTs are cached by the plugin.\
+This is overridden if the introspection endpoint returns a `max-age` header with a lower value.\
+This header derives from the `access-token-ttl` setting for the client that sent the access token.\
+This logic helps to prevent an access token from being cached for longer than its lifetime.
+
+#### scope
+
+> **Syntax**: **`scope`** `string`
+>
+> **Context**: `location`
+>
+> **Default**: *`—`*
+
+Can be configured if you want to verify scopes in the gateway.\
+To do so, specify the required values(s) for the location as a space separated string, such as `read write`.\
+After succesful introspection, if one or more scopes are not present, the plugin will return a 403 error.
+
+#### verify_ssl
+
+> **Syntax**: **`verify_ssl`** `boolean`
+>
+> **Context**: `location`
+>
+> **Default**: *true*
+
+A convenience option that should only be used during development.\
+This setting can be set to `false` if using untrusted server certificates in the Curity Identity Server.\
+Alternatively you can specify trusted CA certificates via the `lua_ssl_trusted_certificate` directive.
+
+## Example Configurations
 
 ### Kong API Gateway
 
@@ -58,7 +125,8 @@ For each API route, configure the plugin using configuration similar to the foll
 ```
 
 When deploying Kong, set an environment variable to activate the plugin in `KONG_PLUGINS`.\
-Also define a dictionary named phantom-token in `KONG_NGINX_HTTP_LUA_SHARED_DICT`:
+Also define a LUA shared dictionary named `phantom-token` for caching introspection results.\
+This  must be provided to Kong via the `KONG_NGINX_HTTP_LUA_SHARED_DICT` environment variable:
 
 ```yaml
 environment:
@@ -72,7 +140,7 @@ environment:
 
 ### OpenResty
 
-If using OpenResty, then first configure a cache for introspection results:
+If using OpenResty, then first configure the cache for introspection results:
 
 ```nginx
 http {
@@ -105,18 +173,7 @@ location ~ ^/api {
 }
 ```
 
-## Configuration Parameters
-
-| Parameter | Required? | Details |
-| --------- | --------- | ------- |
-| introspection_endpoint | Yes | The path to the Curity Identity Server's introspection endpoint |
-| client_id | Yes | The ID of the introspection client configured in the Curity Identity Server |
-| client_secret | Yes | The secret of the introspection client configured in the Curity Identity Server |
-| token_cache_seconds | No | The maximum time for which each result is cached, with a default of 300 |
-| scope | No | Can be configured if you want to verify scopes in the gateway. To do so, specify the required values(s) for the location as a space separated string, such as `read write`. |
-| verify_ssl | No | An override that can be set to `false` if using untrusted server certificates in the Curity Identity Server. Alternatively you can specify trusted CA certificates via the `lua_ssl_trusted_certificate` directive. See [lua_resty_http](https://github.com/ledgetech/lua-resty-http#request_uri) for further details. |
-
-## Advanced Configurations
+### Advanced Configurations
 
 You can apply the plugin to a subset of the API routes, or use the advanced routing features of the reverse proxy.\
 The following Kong configuration is for a use case where a route handles both JWTs and opaque tokens.\
@@ -146,12 +203,17 @@ This might enable a microservice developer to forward a JWT an upstream microser
 
 The equivalent OpenResty configuration is shown in [these tests](/t/advancedRouting.t).
 
-## Tutorial Documentation
+## Deployment
 
-See these tutorials for step by step details on integrating the phantom token plugin:
+The example [Docker Compose File](/docker/docker-compose.yml) provides OpenResty and Kong deployment examples.
 
-- [Kong Phantom Token Integration](https://curity.io/resources/learn/integration-kong-open-source/)
-- [OpenResty Phantom Token Integration](https://curity.io/resources/learn/integration-openresty/)
+## Development and Testing
+
+The following resources provide further details on how to make code changes to this repo:
+
+- [Kong Phantom Token Tutorial](https://curity.io/resources/learn/integration-kong-open-source/)
+- [OpenResty Phantom Token Tutorial](https://curity.io/resources/learn/integration-openresty/)
+- [Wiki](/wiki/wiki.md)
 
 ## More Information
 
