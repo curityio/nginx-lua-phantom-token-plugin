@@ -146,9 +146,12 @@ This might enable a microservice developer to forward a JWT an upstream microser
 
 The equivalent OpenResty configuration is shown in [these tests](/t/advancedRouting.t).
 
-## Documentation
+## Tutorial Documentation
 
-See the [OpenResty Integration](https://curity.io/resources/learn/integration-openresty/) article on the Curity Web Site.
+See these tutorials for step by step details on integrating the phantom token plugin:
+
+- [Kong Phantom Token Integration](https://curity.io/resources/learn/integration-kong-open-source/)
+- [OpenResty Phantom Token Integration](https://curity.io/resources/learn/integration-openresty/)
 
 ## More Information
 
