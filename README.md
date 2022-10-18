@@ -38,8 +38,7 @@ Or deploy the `plugin.lua` file to `resty/phantom-token.lua`, where the resty fo
 
 ### Kong API Gateway
 
-For each API route, configure the plugin using configuration similar to the following.\
-Also add the plugin to the `KONG_PLUGINS` environment variable, by setting it to `bundled,phantom-token`.
+For each API route, configure the plugin using configuration similar to the following:
 
 ```yaml
 - name: myapi
