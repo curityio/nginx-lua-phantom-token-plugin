@@ -37,19 +37,49 @@ local function array_has_value(arr, val)
 end
 
 --
+-- Verify configuration and set defaults that are the same for all requests
+--
+local function initialize_configuration(config)
+
+    if config                          == nil or
+       config.introspection_endpoint   == nil or
+       config.client_id                == nil or
+       config.client_secret            == nil then
+         ngx.log(ngx.WARN, 'The phantom token configuration is invalid and must be corrected')
+         return false
+    end
+
+    if config.token_cache_seconds == nil or config.token_cache_seconds <= 0 then
+        config.token_cache_seconds = 300
+    end
+    if config.scope == nil then
+        config.scope = ''
+    end
+    if config.verify_ssl == nil then
+        config.verify_ssl = true
+    end
+
+    return true
+end
+
+--
 -- Return errors due to invalid tokens or introspection technical problems
 --
 local function error_response(status, code, message)
 
-    local jsonData = '{"code":"' .. code .. '","message":"' .. message .. '"}'
-    ngx.status = status
-    ngx.header['content-type'] = 'application/json'
-
-    if status == 401 then
-        ngx.header['WWW-Authenticate'] = 'Bearer'
+    local method = ngx.req.get_method():upper()
+    if method ~= 'HEAD' then
+    
+        ngx.status = status
+        ngx.header['content-type'] = 'application/json'
+        if status == 401 then
+            ngx.header['WWW-Authenticate'] = 'Bearer'
+        end
+        
+        local jsonData = '{"code":"' .. code .. '","message":"' .. message .. '"}'
+        ngx.say(jsonData)
     end
-
-    ngx.say(jsonData)
+    
     ngx.exit(status)
 end
 
@@ -58,6 +88,10 @@ end
 --
 local function unauthorized_error_response()
     error_response(ngx.HTTP_UNAUTHORIZED, 'unauthorized', 'Missing, invalid or expired access token')
+end
+
+local function server_error_response(config)
+    error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered processing the request')
 end
 
 --
@@ -183,6 +217,12 @@ end
 -- The public entry point to introspect the token then forward the JWT to the API
 --
 function _M.run(config)
+
+    -- Start by validating configuration
+    if initialize_configuration(config) == false then 
+        server_error_response(config)
+        return
+    end
 
     if ngx.req.get_method() == 'OPTIONS' then
         return
