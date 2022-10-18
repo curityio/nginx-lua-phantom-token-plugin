@@ -72,8 +72,7 @@ environment:
 
 ### OpenResty
 
-If using OpenResty, then first configure a cache for introspection results.\
-The [ngx.share.DICT](https://github.com/openresty/lua-nginx-module#ngxshareddict) is used as a cache, so first use the following NGINX directive:
+If using OpenResty, then first configure a cache for introspection results:
 
 ```nginx
 http {
@@ -113,8 +112,8 @@ location ~ ^/api {
 | introspection_endpoint | Yes | The path to the Curity Identity Server's introspection endpoint |
 | client_id | Yes | The ID of the introspection client configured in the Curity Identity Server |
 | client_secret | Yes | The secret of the introspection client configured in the Curity Identity Server |
-| token_cache_seconds | No | The maximum time for which each result is cached |
-| scope | No | One or more scopes can be required for the location, such as `read write` |
+| token_cache_seconds | No | The maximum time for which each result is cached, with a default of 300 |
+| scope | No | Can be configured if you want to verify scopes in the gateway. To do so, specify the required values(s) for the location as a space separated string, such as `read write`. |
 | verify_ssl | No | An override that can be set to `false` if using untrusted server certificates in the Curity Identity Server. Alternatively you can specify trusted CA certificates via the `lua_ssl_trusted_certificate` directive. See [lua_resty_http](https://github.com/ledgetech/lua-resty-http#request_uri) for further details. |
 
 ## Advanced Configurations
