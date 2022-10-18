@@ -213,7 +213,7 @@ The following resources provide further details on how to make code changes to t
 
 - [Kong Phantom Token Tutorial](https://curity.io/resources/learn/integration-kong-open-source/)
 - [OpenResty Phantom Token Tutorial](https://curity.io/resources/learn/integration-openresty/)
-- [Wiki](/wiki/wiki.md)
+- [Wiki](https://github.com/curityio/kong-phantom-token-plugin/wiki)
 
 ## More Information
 
