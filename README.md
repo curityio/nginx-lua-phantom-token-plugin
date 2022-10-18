@@ -57,6 +57,19 @@ Also add the plugin to the `KONG_PLUGINS` environment variable, by setting it to
       token_cache_seconds: 900
 ```
 
+When deploying Kong, set environment variables similar to these.\
+In particular set the values for `KONG_PLUGINS` and `KONG_NGINX_HTTP_LUA_SHARED_DICT`.
+
+```yaml
+environment:
+  KONG_DATABASE: 'off'
+  KONG_DECLARATIVE_CONFIG: '/usr/local/kong/declarative/kong.yml'
+  KONG_PROXY_LISTEN: '0.0.0.0:3000'
+  KONG_LOG_LEVEL: 'info'
+  KONG_PLUGINS: 'bundled,phantom-token'
+  KONG_NGINX_HTTP_LUA_SHARED_DICT: 'phantom-token 10m'
+```
+
 ### OpenResty
 
 If using OpenResty, then first configure a cache for introspection results.\
