@@ -29,7 +29,7 @@ cp plugin/plugin.lua "$OPENRESTY_ROOT/lualib/phantom-token.lua"
 #
 # Deploy the Curity Identity Server and an example API
 #
-./docker/deploy.sh 'test'
+#./docker/deploy.sh 'test'
 if [ $? -ne 0 ]; then
   echo "Problem encountered deploying the Curity Identity Server"
   exit 1
@@ -43,4 +43,4 @@ prove -v -f t/*.t
 #
 # Free resources
 #
-./docker/teardown.sh
+#./docker/teardown.sh

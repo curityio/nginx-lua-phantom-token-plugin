@@ -20,13 +20,9 @@ if [ "$PROFILE" != 'openresty' ] && [ "$PROFILE" != 'kong' ] && [ "$PROFILE" != 
 fi
 
 #
-# Input parameters
-#
-ADMIN_PASSWORD=Password1
-
-#
 # Prompt if required, and expand relative paths such as those containing ~
 #
+ADMIN_PASSWORD=Password1
 if [ "$LICENSE_FILE_PATH" == '' ]; then
   read -t 10 -p 'Enter the path to the license file for the Curity Identity Server: ' LICENSE_FILE_PATH || :
 fi
@@ -46,7 +42,7 @@ if [ "$LICENSE_KEY" == '' ]; then
 fi
 
 #
-# When deploying the reverse proxy, build a custom Docker image, which uses 'luarocks make' to deploy the plugin
+# When deploying the reverse proxy, build the custom Docker image, and use 'luarocks make' to deploy the plugin and its dependencies
 #
 if [ "$PROFILE" == 'kong' ]; then
   
@@ -61,19 +57,25 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-#
-# Deploy the Curity Identity Server, a simple REST API and optionally deploy a reverse proxy
-#
 export LICENSE_KEY
 export ADMIN_PASSWORD
-docker compose --file ./docker/docker-compose.yml --profile "$PROFILE" --project-name phantomtoken up --build --force-recreate
+if [ "$PROFILE" == 'test' ]; then
+    
+    #
+    # When running the root test script, detach, wait for completion, run tests then tear down
+    #
+    docker compose --file ./docker/docker-compose.yml --profile "$PROFILE" --project-name phantomtoken up --build --force-recreate --detach
+    echo 'Waiting for the Curity Identity Server to start...'
+    c=0; while [[ $c -lt 25 && "$(curl -fs -w ''%{http_code}'' localhost:8443)" != "404" ]]; do ((c++)); echo -n "."; sleep 1; done
+
+else
+
+    #
+    # When testing deployed instances of Kong and OpenResty, run Docker components interactively, to view logs
+    #
+    docker compose --file ./docker/docker-compose.yml --profile "$PROFILE" --project-name phantomtoken up --build --force-recreate
+fi
 if [ $? -ne 0 ]; then
   echo "Problem encountered running the Docker deployment"
   exit 1
 fi
-
-#
-# Wait for the Curity Identity Server to come up
-#
-echo 'Waiting for the Curity Identity Server to start...'
-c=0; while [[ $c -lt 25 && "$(curl -fs -w ''%{http_code}'' localhost:8443)" != "404" ]]; do ((c++)); echo -n "."; sleep 1; done

@@ -28,7 +28,8 @@ sub get_token_from_idsvr {
     my $response = $ua->post("http://localhost:8443/oauth/v2/oauth-token", {
         "client_id" => "test-client",
         "client_secret" => "secret1",
-        "grant_type" => "client_credentials"
+        "grant_type" => "client_credentials",
+        "scope" => "read"
     });
     my $content = $response->decoded_content();
 
