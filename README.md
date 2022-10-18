@@ -8,7 +8,8 @@ A LUA plugin used to introspect opaque access tokens and forward JWT access toke
 ## The Phantom Token Pattern
 
 The [Phantom Token Pattern](https://curity.io/resources/learn/phantom-token-pattern/) is a privacy preserving pattern in API security.\
-It ensures that access tokens returned to internet clients are kept confidential while also ensuring simple but secure API code.
+It ensures that access tokens returned to internet clients are kept confidential.\
+It also externalizes introspection and caching from APIs, to keep the API security code simple.
 
 ![Phantom Token Pattern](images/phantom-token-pattern.png)
 
