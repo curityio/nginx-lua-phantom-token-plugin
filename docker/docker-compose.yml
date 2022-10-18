@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+
+  #
+  # Use Kong Open Source as the reverse proxy when the kong profile is set on the command line
+  #
+  kong:
+    image: custom_kong:3.0.0-alpine
+    hostname: kongserver
+    ports:
+      - 3000:3000
+    volumes:
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: '/usr/local/kong/declarative/kong.yml'
+      KONG_PROXY_LISTEN: '0.0.0.0:3000'
+      KONG_LOG_LEVEL: 'info'
+      KONG_PLUGINS: 'bundled,phantom-token'
+      KONG_NGINX_HTTP_LUA_SHARED_DICT: 'phantom-token 10m'
+    profiles:
+      - kong
+
+  #
+  # Use OpenResty as the reverse proxy when the openresty profile is set on the command line
+  #
+  openresty:
+    image: custom_openresty:1.21.4.1-bionic
+    hostname: openrestyserver
+    ports:
+      - 3000:3000
+    volumes:
+      - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    profiles:
+      - openresty
+
+  #
+  # A tiny API as a target for testing routing
+  #
+  business-api:
+    hostname: apiserver
+    build:
+      context: ..
+      dockerfile: ./docker/api/Dockerfile
+    profiles:
+      - kong
+      - openresty
+
+  #
+  # The Curity Identity Server is deployed for all test configurations
+  #
+  curity:
+    image: curity.azurecr.io/curity/idsvr
+    hostname: curityserver
+    ports:
+      - 6749:6749
+      - 8443:8443
+    environment:
+      - ADMIN=true
+      - SERVICE_ROLE=default
+      - LICENSE_KEY=${LICENSE_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - ../curity-test-config.xml:/opt/idsvr/etc/init/curity-test-config.xml
