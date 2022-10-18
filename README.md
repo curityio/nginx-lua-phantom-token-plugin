@@ -201,7 +201,7 @@ This might enable a microservice developer to forward a JWT an upstream microser
         token_cache_seconds: 900
 ```
 
-The equivalent OpenResty configuration is shown in [these tests](/t/advancedRouting.t).
+The equivalent OpenResty configuration is shown in [these tests](/t/advanced_routing.t).
 
 ## Deployment
 
