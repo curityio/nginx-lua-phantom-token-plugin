@@ -187,7 +187,7 @@ This might enable a microservice developer to forward a JWT an upstream microser
     paths:
     - /api
     headers:
-      authorization: ["~*bearer\\s*[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*"]
+      authorization: ["~*[Bb]earer\\s*[A-Za-z0-9-_]*.[A-Za-z0-9-_]*.[A-Za-z0-9-_]*"]
 
   - name: phantom-token
     paths:

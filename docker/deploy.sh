@@ -65,7 +65,7 @@ if [ "$PROFILE" == 'test' ]; then
     # When running the root test script, detach, wait for completion, run tests then tear down
     #
     docker compose --file ./docker/docker-compose.yml --profile "$PROFILE" --project-name phantomtoken up --build --force-recreate --detach
-    echo 'Waiting for the Curity Identity Server to start...'
+    echo 'Waiting for the Curity Identity Server ...'
     c=0; while [[ $c -lt 25 && "$(curl -fs -w ''%{http_code}'' localhost:8443)" != "404" ]]; do ((c++)); echo -n "."; sleep 1; done
 
 else

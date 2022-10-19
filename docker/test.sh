@@ -13,6 +13,12 @@ RESPONSE_FILE=response.txt
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 #
+# Ensure that the Curity Identity Server is ready
+#
+echo 'Waiting for the Curity Identity Server ...'
+c=0; while [[ $c -lt 25 && "$(curl -fs -w ''%{http_code}'' localhost:8443)" != "404" ]]; do ((c++)); echo -n "."; sleep 1; done
+
+#
 # First authenticate as a client to get an opaque token
 #
 echo '1. Acting as a client to get an access token ...'

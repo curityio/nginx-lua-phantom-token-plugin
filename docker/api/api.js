@@ -7,7 +7,7 @@ const server = http.createServer((req, res) => {
 
     const auth = req.headers['authorization'];
     let accessToken = '[NONE]';
-    if (auth && auth.startsWith('Bearer ')) {
+    if (auth && auth.toLowerCase().startsWith('bearer ')) {
         accessToken = auth.substring(7);
     }
 
