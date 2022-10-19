@@ -27,6 +27,6 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    ["resty.phantom-token"] = "plugin/plugin.lua"
+    ["resty.phantom-token"] = "plugin/access.lua"
   }
 }

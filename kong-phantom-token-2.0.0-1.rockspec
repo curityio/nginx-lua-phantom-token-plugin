@@ -27,7 +27,7 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    ["kong.plugins.phantom-token.access"]  = "plugin/plugin.lua",
+    ["kong.plugins.phantom-token.access"]  = "plugin/access.lua",
     ["kong.plugins.phantom-token.handler"] = "plugin/handler.lua",
     ["kong.plugins.phantom-token.schema"]  = "plugin/schema.lua"
   }
