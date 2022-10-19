@@ -98,8 +98,8 @@ GET /t
 --- http_config
 lua_shared_dict phantom-token 10m;
 map $http_authorization $loc {
-    ~^bearer\s*[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]* loc_bypass;
-    default                                                   loc_phantom_token;
+    ~^[Bb]earer\s*[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]* loc_bypass;
+    default                                                      loc_phantom_token;
 }
 
 --- config
