@@ -1,7 +1,7 @@
 package = "kong-phantom-token"
 version = "2.0.0-1"
 source = {
-  url = "git://github.com/curityio/lua-nginx-phantom-token-plugin",
+  url = "git://github.com/curityio/nginx-lua-phantom-token-plugin",
   tag = "v2.0.0"
 }
 description = {
