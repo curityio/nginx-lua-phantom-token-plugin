@@ -24,7 +24,7 @@ export PATH=${PATH}:"$OPENRESTY_ROOT/nginx/sbin"
 #
 # Copy the latest plugin to the LUA libraries folder
 #
-cp plugin/plugin.lua "$OPENRESTY_ROOT/lualib/phantom-token.lua"
+cp plugin/access.lua "$OPENRESTY_ROOT/lualib/phantom-token.lua"
 
 #
 # Deploy the Curity Identity Server and an example API

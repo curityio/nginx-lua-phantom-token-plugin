@@ -33,7 +33,7 @@ If you are using luarocks, execute the following command to install the plugin:
 luarocks install lua-resty-phantom-token 2.0.0
 ```
 
-Or deploy the `plugin.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.
+Or deploy the `access.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.
 
 ## Required Configuration Directives
 

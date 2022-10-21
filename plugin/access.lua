@@ -193,10 +193,6 @@ local function verify_access_token(access_token, config)
     local result = introspect_access_token(access_token, config)
     if result.status == 200 then
 
-        if not verify_scope(result.jwt, config.scope) then
-            return { status = 403 }
-        end
-
         local time_to_live = config.token_cache_seconds
         if result.expiry > 0 and result.expiry < config.token_cache_seconds then
             time_to_live = result.expiry
@@ -208,6 +204,13 @@ local function verify_access_token(access_token, config)
         -- The expiry value is a number of seconds from the current time
         -- https://github.com/openresty/lua-nginx-module#ngxshareddictset
         dict:set(access_token, result.jwt, time_to_live)
+
+        -- Verify the scope after caching the introspection results
+        -- This ensures that an invalid token doesn't cause repeated introspection requests
+        -- This reduces potential load on the authorization server
+        if not verify_scope(result.jwt, config.scope) then
+            return { status = 403 }
+        end
     end
 
     return result
