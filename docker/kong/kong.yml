@@ -1,0 +1,18 @@
+_format_version: '2.1'
+_transform: true
+
+services:
+
+- name: business-api
+  url: http://apiserver:3001
+  routes:
+  - name: business-api-route
+    paths:
+    - /
+  plugins:
+  - name: phantom-token
+    config:
+      introspection_endpoint: http://curityserver:8443/oauth/v2/oauth-introspect
+      client_id: introspection-client
+      client_secret: secret2
+      token_cache_seconds: 900

@@ -1,0 +1,2 @@
+# The module is coded in LUA, so prevent tests changing the GitHub language displayed
+t/* linguist-vendored

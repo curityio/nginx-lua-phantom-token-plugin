@@ -1,16 +1,17 @@
-local BasePlugin = require "kong.plugins.base_plugin"
+--
+-- The Kong entry point handler
+--
+
 local access = require "kong.plugins.phantom-token.access"
 
-local TokenHandler = BasePlugin:extend()
-TokenHandler.PRIORITY = 1000
+-- See https://github.com/Kong/kong/discussions/7193 for more about the PRIORITY field
+local PhantomToken = {
+    PRIORITY = 1000,
+    VERSION = "2.0.0",
+}
 
-function TokenHandler:new()
-    TokenHandler.super.new(self, "phantom-token")
-end
-
-function TokenHandler:access(conf)
-    TokenHandler.super.access(self)
+function PhantomToken:access(conf)
     access.run(conf)
 end
 
-return TokenHandler
+return PhantomToken
