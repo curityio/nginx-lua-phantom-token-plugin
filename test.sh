@@ -14,7 +14,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 #
 # Point to the OpenResty install
 #
-OPENRESTY_ROOT=/usr/local/Cellar/openresty/1.21.4.1_1
+OPENRESTY_ROOT=/usr/local/Cellar/openresty/1.25.3.1_1
 
 #
 # Ensure that the OpenResty nginx, with LUA support, will be found by the prove tool
