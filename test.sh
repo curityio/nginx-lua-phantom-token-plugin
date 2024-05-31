@@ -43,4 +43,4 @@ prove -v -f t/api_requests.t
 #
 # Free resources
 #
-#./docker/teardown.sh
+./docker/teardown.sh
