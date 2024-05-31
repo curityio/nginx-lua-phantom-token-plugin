@@ -24,7 +24,7 @@ fi
 #
 ADMIN_PASSWORD=Password1
 if [ "$LICENSE_FILE_PATH" == '' ]; then
-  read -t 10 -p 'Enter the path to the license file for the Curity Identity Server: ' LICENSE_FILE_PATH || :
+  read -t 60 -p 'Enter the path to the license file for the Curity Identity Server: ' LICENSE_FILE_PATH || :
 fi
 LICENSE_FILE_PATH=$(eval echo "$LICENSE_FILE_PATH")
 

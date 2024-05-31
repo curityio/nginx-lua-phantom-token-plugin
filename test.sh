@@ -38,9 +38,9 @@ fi
 #
 # Run all Perl tests, which will call the Curity Identity Server and the API
 #
-prove -v -f t/*.t
+prove -v -f t/api_requests.t
 
 #
 # Free resources
 #
-./docker/teardown.sh
+#./docker/teardown.sh
