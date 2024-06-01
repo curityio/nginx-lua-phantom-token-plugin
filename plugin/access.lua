@@ -214,8 +214,10 @@ local function verify_access_token(access_token, config)
     end
 
     -- If configured, verify the scope on every request in a zero-trust manner
-    if not verify_scope(result.jwt, config.scope) then
-        result = { status = 403 }
+    if result.status == 200 then
+        if not verify_scope(result.jwt, config.scope) then
+            result = { status = 403 }
+        end
     end
 
     return result

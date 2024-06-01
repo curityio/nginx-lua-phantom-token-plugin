@@ -38,7 +38,7 @@ fi
 #
 # Run all Perl tests, which will call the Curity Identity Server and the API
 #
-prove -v -f t/api_requests.t
+prove -v -f t/*.t
 
 #
 # Free resources
