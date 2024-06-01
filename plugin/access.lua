@@ -100,7 +100,7 @@ end
 local function introspect_access_token(access_token, config)
 
     local httpc = http:new()
-    local clientCredential = ngx.escape_uri(config.client_id) .. ':' .. ngx.escape_uri(config.client_secret)
+    local clientCredential = config.client_id .. ':' .. config.client_secret
     local authorizationHeader = 'Basic ' .. ngx.encode_base64(clientCredential)
     local result, error = httpc:request_uri(config.introspection_endpoint, {
         method = 'POST',
