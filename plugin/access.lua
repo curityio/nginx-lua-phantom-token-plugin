@@ -100,12 +100,13 @@ end
 local function introspect_access_token(access_token, config)
 
     local httpc = http:new()
-    local introspectCredentials = ngx.encode_base64(config.client_id .. ':' .. config.client_secret)
+    local clientCredential = config.client_id .. ':' .. config.client_secret
+    local authorizationHeader = 'Basic ' .. ngx.encode_base64(clientCredential)
     local result, error = httpc:request_uri(config.introspection_endpoint, {
         method = 'POST',
         body = 'token=' .. access_token,
         headers = { 
-            ['authorization'] = 'Basic ' .. introspectCredentials,
+            ['authorization'] = authorizationHeader,
             ['content-type'] = 'application/x-www-form-urlencoded',
             ['accept'] = 'application/jwt'
         },
@@ -182,34 +183,40 @@ end
 --
 local function verify_access_token(access_token, config)
 
-    -- Return previous introspeciton results for the same token if available
+    local result = { status = 401 }
+
+    -- See if there is an introspection result in the cache
     local dict = ngx.shared['phantom-token']
     local existing_jwt = dict:get(access_token)
     if existing_jwt then
-        return { status = 200, jwt = existing_jwt }
+
+        -- Return cached introspection results for the same token
+        result = { status = 200, jwt = existing_jwt }
+    
+    else
+
+        -- Otherwise introspect the opaque access token
+        result = introspect_access_token(access_token, config)
+        if result.status == 200 then
+
+            local time_to_live = config.token_cache_seconds
+            if result.expiry > 0 and result.expiry < config.token_cache_seconds then
+                time_to_live = result.expiry
+            end
+
+            -- Cache the result so that introspection is efficient under load
+            -- The opaque access token is already a unique string similar to a GUID so use it as a cache key
+            -- The cache is atomic and thread safe so is safe to use across concurrent requests
+            -- The expiry value is a number of seconds from the current time
+            -- https://github.com/openresty/lua-nginx-module#ngxshareddictset
+            dict:set(access_token, result.jwt, time_to_live)
+        end
     end
 
-    -- Otherwise introspect the opaque access token
-    local result = introspect_access_token(access_token, config)
+    -- If configured, verify the scope on every request in a zero-trust manner
     if result.status == 200 then
-
-        local time_to_live = config.token_cache_seconds
-        if result.expiry > 0 and result.expiry < config.token_cache_seconds then
-            time_to_live = result.expiry
-        end
-
-        -- Cache the result so that introspection is efficient under load
-        -- The opaque access token is already a unique string similar to a GUID so use it as a cache key
-        -- The cache is atomic and thread safe so is safe to use across concurrent requests
-        -- The expiry value is a number of seconds from the current time
-        -- https://github.com/openresty/lua-nginx-module#ngxshareddictset
-        dict:set(access_token, result.jwt, time_to_live)
-
-        -- Verify the scope after caching the introspection results
-        -- This ensures that an invalid token doesn't cause repeated introspection requests
-        -- This reduces potential load on the authorization server
         if not verify_scope(result.jwt, config.scope) then
-            return { status = 403 }
+            result = { status = 403 }
         end
     end
 

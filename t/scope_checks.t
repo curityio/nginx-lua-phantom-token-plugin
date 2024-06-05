@@ -66,7 +66,7 @@ location /t {
         phantomToken.run(config)
     }
 
-    proxy_pass http://localhost:1984/target;
+    proxy_pass http://127.0.0.1:1984/target;
 }
 location /target {
     add_header 'authorization' $http_authorization;
@@ -109,7 +109,7 @@ location /t {
         phantomToken.run(config)
     }
 
-    proxy_pass http://localhost:1984/target;
+    proxy_pass http://127.0.0.1:1984/target;
 }
 location /target {
     add_header 'authorization' $http_authorization;

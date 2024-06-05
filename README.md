@@ -20,7 +20,7 @@ It also externalizes introspection and caching from APIs, to keep the API securi
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install kong-phantom-token 2.0.0
+luarocks install kong-phantom-token 2.0.1
 ```
 
 Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/5.1/kong/plugins/phantom-token`.
@@ -30,7 +30,7 @@ Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install lua-resty-phantom-token 2.0.0
+luarocks install lua-resty-phantom-token 2.0.1
 ```
 
 Or deploy the `access.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.\
@@ -215,20 +215,6 @@ The following resources provide further details on how to make code changes to t
 - [Kong Phantom Token Tutorial](https://curity.io/resources/learn/integration-kong-open-source/)
 - [OpenResty Phantom Token Tutorial](https://curity.io/resources/learn/integration-openresty/)
 - [Wiki](https://github.com/curityio/kong-phantom-token-plugin/wiki)
-
-## Breaking Changes
-
-### v2.0.0
-
-When using the Kong API gateway you must now provide the following environment variable (see below):
-
-```text
-KONG_NGINX_HTTP_LUA_SHARED_DICT: 'phantom-token 10m'
-```
-
-The `trusted_web_origins` configuration directive is no longer used.\
-For OpenResty, the `time_to_live_seconds` setting has been renamed to `token_cache_seconds`.
-
 
 ## More Information
 
