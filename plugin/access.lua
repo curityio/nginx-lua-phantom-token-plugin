@@ -206,10 +206,6 @@ local function apply_default_configuration(config)
         config.token_cache_seconds = 300
     end
 
-    if config.scope == nil then
-        config.scope = ''
-    end
-
     if config.verify_ssl == nil then
         config.verify_ssl = true
     end
