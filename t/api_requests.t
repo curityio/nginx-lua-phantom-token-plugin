@@ -117,7 +117,9 @@ GET /t
 
 --- response_headers
 content-type: application/json
-WWW-Authenticate: Bearer
+
+--- response_headers_like
+WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
 {"code":"unauthorized","message":"Missing, invalid or expired access token"}
@@ -154,7 +156,9 @@ GET /t
 
 --- response_headers
 content-type: application/json
-WWW-Authenticate: Bearer
+
+--- response_headers_like
+WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
 {"code":"unauthorized","message":"Missing, invalid or expired access token"}
@@ -194,7 +198,9 @@ GET /t
 
 --- response_headers
 content-type: application/json
-WWW-Authenticate: Bearer
+
+--- response_headers_like
+WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
 {"code":"unauthorized","message":"Missing, invalid or expired access token"}
@@ -234,7 +240,9 @@ GET /t
 
 --- response_headers
 content-type: application/json
-WWW-Authenticate: Bearer
+
+--- response_headers_like
+WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
 {"code":"unauthorized","message":"Missing, invalid or expired access token"}

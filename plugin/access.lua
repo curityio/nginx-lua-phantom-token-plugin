@@ -58,6 +58,9 @@ local function initialize_configuration(config)
     if config.verify_ssl == nil then
         config.verify_ssl = true
     end
+    if config.scheme == nil then
+        config.scheme = "Bearer"
+    end
 
     return true
 end
@@ -65,7 +68,7 @@ end
 --
 -- Return errors due to invalid tokens or introspection technical problems
 --
-local function error_response(status, code, message)
+local function error_response(scheme, status, code, message)
 
     local method = ngx.req.get_method():upper()
     if method ~= 'HEAD' then
@@ -73,7 +76,7 @@ local function error_response(status, code, message)
         ngx.status = status
         ngx.header['content-type'] = 'application/json'
         if status == 401 then
-            ngx.header['WWW-Authenticate'] = 'Bearer'
+            ngx.header['WWW-Authenticate'] = string.format('%s error="%s", error_description="%s"', scheme, code, message)
         end
         
         local jsonData = '{"code":"' .. code .. '","message":"' .. message .. '"}'
@@ -86,12 +89,12 @@ end
 --
 -- Return a generic message for all three of these error categories
 --
-local function unauthorized_error_response()
-    error_response(ngx.HTTP_UNAUTHORIZED, 'unauthorized', 'Missing, invalid or expired access token')
+local function unauthorized_error_response(scheme)
+    error_response(scheme, ngx.HTTP_UNAUTHORIZED, 'unauthorized', 'Missing, invalid or expired access token')
 end
 
-local function server_error_response(config)
-    error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered processing the request')
+local function server_error_response()
+    error_response('', ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered processing the request')
 end
 
 --
@@ -230,8 +233,7 @@ function _M.run(config)
 
     -- Start by validating configuration
     if initialize_configuration(config) == false then 
-        server_error_response(config)
-        return
+        server_error_response()
     end
 
     if ngx.req.get_method() == 'OPTIONS' then
@@ -239,31 +241,41 @@ function _M.run(config)
     end
 
     local auth_header = ngx.req.get_headers()['Authorization']
-    if auth_header and string.len(auth_header) > 7 and string.lower(string.sub(auth_header, 1, 7)) == 'bearer ' then
-
-        local access_token_untrimmed = string.sub(auth_header, 8)
-        local access_token = string.gsub(access_token_untrimmed, "%s+", "")
-        local result = verify_access_token(access_token, config)
-    
-        if result.status == 500 then
-            error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered authorizing the HTTP request')
-        end
-
-        if result.status == 403 then
-            error_response(ngx.HTTP_FORBIDDEN, 'forbidden', 'The token does not contain the required scope')
-        end
-
-        if result.status ~= 200 then
-            ngx.log(ngx.WARN, 'Received a ' .. result.status .. ' introspection response due to the access token being invalid or expired')
-            unauthorized_error_response()
-        end
-
-        ngx.req.set_header('Authorization', 'Bearer ' .. result.jwt)
-    else
-
-        ngx.log(ngx.WARN, 'No valid access token was found in the HTTP Authorization header')
-        unauthorized_error_response()
+    if not auth_header then
+        ngx.log(ngx.WARN, 'No HTTP Authorization header was found')
+        unauthorized_error_response(config.scheme)
     end
+
+    -- Read either an Authorization: Bearer or Authorization: DPoP value
+    local scheme, access_token = auth_header:match("^%s*(%S+)%s+(.+)%s*$")
+    if not scheme or scheme:lower() ~= config.scheme:lower() then
+        ngx.log(ngx.WARN, 'No valid scheme was found in the HTTP Authorization header')
+        unauthorized_error_response(config.scheme)
+    end
+
+    if not access_token then
+        ngx.log(ngx.WARN, 'No valid access token was found in the HTTP Authorization header')
+        unauthorized_error_response(config.scheme)
+    end
+
+    local result = verify_access_token(access_token, config)
+
+    if result.status == 500 then
+        error_response(config.scheme, ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered authorizing the HTTP request')
+    end
+
+    if result.status == 403 then
+        error_response(config.scheme, ngx.HTTP_FORBIDDEN, 'forbidden', 'The token does not contain the required scope')
+    end
+
+    if result.status ~= 200 then
+        ngx.log(ngx.WARN, 'Received a ' .. result.status .. ' introspection response due to the access token being invalid or expired')
+        unauthorized_error_response(config.scheme)
+    end
+
+    -- Pass the JWT to the next stage for processing
+    ngx.log(ngx.WARN, '*** SAUL GOOD')
+    ngx.req.set_header('Authorization', config.scheme .. ' ' .. result.jwt)
 end
 
 return _M

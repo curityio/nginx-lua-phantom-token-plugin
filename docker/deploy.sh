@@ -46,11 +46,11 @@ fi
 #
 if [ "$PROFILE" == 'kong' ]; then
   
-  docker build -f docker/kong/Dockerfile --no-cache -t custom_kong:3.0.0-alpine .
+  docker build -f docker/kong/Dockerfile --no-cache -t custom_kong:3.9.0-ubuntu .
 
 elif [ "$PROFILE" == 'openresty' ]; then
 
-  docker build -f docker/openresty/Dockerfile --no-cache -t custom_openresty:1.21.4.1-bionic .
+  docker build -f docker/openresty/Dockerfile --no-cache -t custom_openresty:1.31.1.1-bookworm .
 fi
 if [ $? -ne 0 ]; then
   echo "Problem encountered building the reverse proxy docker image"

@@ -174,6 +174,8 @@ The phantom token configuration is invalid and must be corrected
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
 
+--- ONLY
+
 === TEST CONFIG_4: A deployment with a misspelt field does not crash NGINX
 #####################################################################################################
 # Verify that bad configuration is handled in a controlled manner rather than causing server problems

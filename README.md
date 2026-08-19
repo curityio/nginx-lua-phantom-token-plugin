@@ -20,7 +20,7 @@ It also externalizes introspection and caching from APIs, to keep the API securi
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install kong-phantom-token 2.0.1
+luarocks install kong-phantom-token 2.0.2
 ```
 
 Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/5.1/kong/plugins/phantom-token`.
@@ -30,7 +30,7 @@ Or deploy the .lua files into Kong's plugin directory, eg `/usr/local/share/lua/
 If you are using luarocks, execute the following command to install the plugin:
 
 ```bash
-luarocks install lua-resty-phantom-token 2.0.1
+luarocks install lua-resty-phantom-token 2.0.2
 ```
 
 Or deploy the `access.lua` file to `resty/phantom-token.lua`, where the resty folder is in the `lua_package_path`.\
