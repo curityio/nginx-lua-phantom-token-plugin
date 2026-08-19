@@ -157,7 +157,7 @@ Then apply the plugin to one or more locations with configuration similar to the
 ```nginx
 location ~ ^/api {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'https://login.example.com/oauth/v2/oauth-introspect',

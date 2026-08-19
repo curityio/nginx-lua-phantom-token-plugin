@@ -10,8 +10,8 @@ local PhantomToken = {
     VERSION = "3.0.0",
 }
 
-function PhantomToken:access(conf)
-    access.run(conf)
+function PhantomToken:access(config)
+    access.run(config)
 end
 
 return PhantomToken

@@ -62,7 +62,7 @@ location @loc_bypass {
 }
 location @loc_phantom_token {
     
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -112,7 +112,7 @@ location @loc_bypass {
 }
 location @loc_phantom_token {
     
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',

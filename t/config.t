@@ -51,7 +51,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             client_id = 'introspection-client',
@@ -60,7 +60,16 @@ location /t {
         }
 
         local phantomToken = require 'phantom-token'
-        phantomToken.run(config)
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 }
 
@@ -72,8 +81,8 @@ GET /t
 --- more_headers eval
 "Authorization: bearer " . $main::token;
 
---- error_log
-The phantom token configuration is invalid and must be corrected
+--- error_log_like
+The phantom token plugin requires^
 
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
@@ -86,7 +95,7 @@ The phantom token configuration is invalid and must be corrected
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             client_id = 'introspection-client',
@@ -95,7 +104,16 @@ location /t {
         }
 
         local phantomToken = require 'phantom-token'
-        phantomToken.run(config)
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 }
 
@@ -107,27 +125,36 @@ GET /t
 --- more_headers eval
 "Authorization: bearer " . $main::token;
 
---- error_log
-The phantom token configuration is invalid and must be corrected
+--- error_log_like
+The phantom token plugin requires^
 
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
 
-=== TEST CONFIG_2: A deployment with missing data does not crash NGINX
-#######################################################################################################
-# Verify that empty configuration is handled in a controlled manner rather than causing server problems
-#######################################################################################################
+=== TEST CONFIG_3: A deployment with missing data fails validation
+##################################################################
+# Verify that empty configuration is handled by failing validation
+##################################################################
 
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
         }
 
         local phantomToken = require 'phantom-token'
-        phantomToken.run(config)
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 }
 
@@ -139,24 +166,34 @@ GET /t
 --- more_headers eval
 "Authorization: bearer " . $main::token;
 
---- error_log
-The phantom token configuration is invalid and must be corrected
+--- error_log_like
+The phantom token plugin requires^
 
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
 
-=== TEST CONFIG_3: A deployment with null data does not crash NGINX
-#######################################################################################################
-# Verify that null configuration is handled in a controlled manner rather than causing server problems
-#######################################################################################################
+=== TEST CONFIG_4: A deployment with null data fails validation
+#################################################################
+# Verify that null configuration is handled by failing validation
+#################################################################
 
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
+        local config = nil
         local phantomToken = require 'phantom-token'
-        phantomToken.run()
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 }
 
@@ -168,15 +205,13 @@ GET /t
 --- more_headers eval
 "Authorization: bearer " . $main::token;
 
---- error_log
-The phantom token configuration is invalid and must be corrected
+--- error_log_like
+The phantom token plugin requires^
 
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
 
---- ONLY
-
-=== TEST CONFIG_4: A deployment with a misspelt field does not crash NGINX
+=== TEST CONFIG_5: A deployment with a misspelt field fails validation
 #####################################################################################################
 # Verify that bad configuration is handled in a controlled manner rather than causing server problems
 #####################################################################################################
@@ -184,7 +219,7 @@ The phantom token configuration is invalid and must be corrected
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspectionn_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -194,7 +229,16 @@ location /t {
         }
 
         local phantomToken = require 'phantom-token'
-        phantomToken.run(config)
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 }
 
@@ -206,13 +250,13 @@ GET /t
 --- more_headers eval
 "Authorization: bearer " . $main::token;
 
---- error_log
-The phantom token configuration is invalid and must be corrected
+--- error_log_like
+The phantom token plugin requires^
 
 --- response_body_like chomp
 {"code":"server_error","message":"Problem encountered processing the request"}
 
-=== TEST_CONFIG_5: A deployment with all optional fields are omitted successfully introspects tokens
+=== TEST_CONFIG_6: A deployment with all optional fields are omitted successfully introspects tokens
 #######################################################################
 # The happy case works as expected when all optional fields are omitted
 #######################################################################
@@ -223,7 +267,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -232,7 +276,16 @@ location /t {
         }
 
         local phantomToken = require 'phantom-token'
-        phantomToken.run(config)
+        local ok, err = phantomToken.validate(config)
+        if ok then
+            phantomToken.run(config)
+        else
+            ngx.log(ngx.ERR, err)
+            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+            ngx.header.content_type = 'application/json'
+            ngx.say('{"code":"server_error","message":"Problem encountered processing the request"}')
+            return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+        end
     }
 
     proxy_pass http://127.0.0.1:1984/target;

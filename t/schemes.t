@@ -51,7 +51,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -94,7 +94,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -124,7 +124,7 @@ content-type: application/json
 WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
 
 === TEST_SCHEME_3: An opaque DPoP token can be introspected for a JWT
 #############################################################
@@ -137,7 +137,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -180,7 +180,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -210,4 +210,4 @@ content-type: application/json
 WWW-Authenticate: ^DPoP
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}

@@ -37,35 +37,6 @@ local function array_has_value(arr, val)
 end
 
 --
--- Verify configuration and set defaults that are the same for all requests
---
-local function initialize_configuration(config)
-
-    if config                          == nil or
-       config.introspection_endpoint   == nil or
-       config.client_id                == nil or
-       config.client_secret            == nil then
-         ngx.log(ngx.WARN, 'The phantom token configuration is invalid and must be corrected')
-         return false
-    end
-
-    if config.token_cache_seconds == nil or config.token_cache_seconds <= 0 then
-        config.token_cache_seconds = 300
-    end
-    if config.scope == nil then
-        config.scope = ''
-    end
-    if config.verify_ssl == nil then
-        config.verify_ssl = true
-    end
-    if config.scheme == nil then
-        config.scheme = "Bearer"
-    end
-
-    return true
-end
-
---
 -- Return errors due to invalid tokens or introspection technical problems
 --
 local function error_response(scheme, status, code, message)
@@ -90,7 +61,7 @@ end
 -- Return a generic message for all three of these error categories
 --
 local function unauthorized_error_response(scheme)
-    error_response(scheme, ngx.HTTP_UNAUTHORIZED, 'unauthorized', 'Missing, invalid or expired access token')
+    error_response(scheme, ngx.HTTP_UNAUTHORIZED, 'invalid_token', 'Missing, invalid or expired access token')
 end
 
 local function server_error_response()
@@ -227,18 +198,65 @@ local function verify_access_token(access_token, config)
 end
 
 --
+-- Apply default configuration settings, e.g. when running in OpenResty
+--
+local function apply_default_configuration(config)
+
+    if config.token_cache_seconds == nil or config.token_cache_seconds <= 0 then
+        config.token_cache_seconds = 300
+    end
+
+    if config.scope == nil then
+        config.scope = ''
+    end
+
+    if config.verify_ssl == nil then
+        config.verify_ssl = true
+    end
+
+    if not config.scheme then
+        config.scheme = "Bearer"
+    end
+end
+
+--
+-- Validate incorrect configuration before running in OpenResty
+--
+function _M.validate(config)
+
+    if not config then
+        return nil, "The phantom token plugin requires configuration"
+    end
+
+    if not config.client_id then
+        return nil, "The phantom token plugin requires a client_id parameter"
+    end
+
+    if not config.client_secret then
+        return nil, "The phantom token plugin requires a client_secret parameter"
+    end
+
+    if not config.introspection_endpoint or not config.introspection_endpoint:match("^https?://") then
+        return nil, "The phantom token plugin requires an introspection endpoint that starts with http:// or https://"
+    end
+
+    if config.scheme and config.scheme ~= "Bearer" and config.scheme ~= "DPoP" then
+        return nil, "The phantom token plugin requires a scheme of Bearer or DPoP"
+    end
+
+    return true
+end
+
+--
 -- The public entry point to introspect the token then forward the JWT to the API
 --
 function _M.run(config)
 
-    -- Start by validating configuration
-    if initialize_configuration(config) == false then 
-        server_error_response()
-    end
-
     if ngx.req.get_method() == 'OPTIONS' then
         return
     end
+
+    apply_default_configuration(config)
 
     local auth_header = ngx.req.get_headers()['Authorization']
     if not auth_header then
@@ -274,7 +292,6 @@ function _M.run(config)
     end
 
     -- Pass the JWT to the next stage for processing
-    ngx.log(ngx.WARN, '*** SAUL GOOD')
     ngx.req.set_header('Authorization', config.scheme .. ' ' .. result.jwt)
 end
 

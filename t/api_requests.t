@@ -51,7 +51,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -93,7 +93,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -122,7 +122,7 @@ content-type: application/json
 WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
 
 === TEST_API_REQUEST_3: Sending no authorization header results in an access denied error
 #################################################
@@ -135,7 +135,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -161,7 +161,7 @@ content-type: application/json
 WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
 
 === TEST_API_REQUEST_4: The wrong authorization scheme results in an access denied error
 ##############################################################
@@ -174,7 +174,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -203,7 +203,7 @@ content-type: application/json
 WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
 
 === TEST_API_REQUEST_5: A valid token with trash after results in an access denied error
 ######################################################################################
@@ -216,7 +216,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -245,7 +245,7 @@ content-type: application/json
 WWW-Authenticate: ^Bearer
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
 
 === TEST_API_REQUEST_6: The bearer HTTP method can be in upper case
 #####################################################
@@ -258,7 +258,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -300,7 +300,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -342,7 +342,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
