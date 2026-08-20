@@ -137,6 +137,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
+    set $original_access_token "";
     access_by_lua_block {
 
         local config = {
