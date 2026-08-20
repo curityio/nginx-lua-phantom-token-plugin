@@ -290,7 +290,7 @@ function _M.run(config)
     -- Pass the JWT to the next stage for processing
     ngx.req.set_header('Authorization', config.scheme .. ' ' .. result.jwt)
 
-    -- For DPoP, make the original opaque access token available in a vrtiable, to enable verification of the DPoP ath claim
+    -- For DPoP, make the original opaque access token available in a variable, to enable verification of the DPoP ath claim
     if config.scheme == 'DPoP' then
         ngx.var.original_access_token = access_token
     end
