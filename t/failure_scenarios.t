@@ -52,7 +52,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8447/oauth/v2/oauth-introspect',
@@ -88,7 +88,7 @@ lua_shared_dict phantom-token 10m;
 --- config
 location /t {
 
-    rewrite_by_lua_block {
+    access_by_lua_block {
 
         local config = {
             introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
@@ -111,4 +111,4 @@ GET /t
 "Authorization: bearer " . $main::token
 
 --- response_body_like chomp
-{"code":"unauthorized","message":"Missing, invalid or expired access token"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}

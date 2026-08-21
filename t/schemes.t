@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-#######################################################
-# Runs tests related to enforcing scopes in the gateway
-#######################################################
+################################################################
+# Runs tests focused on authorization schemes of Bearer and DPoP
+################################################################
 
 use strict;
 use warnings;
@@ -29,7 +29,7 @@ sub get_token_from_idsvr {
         "client_id" => "test-client",
         "client_secret" => "secret1",
         "grant_type" => "client_credentials",
-        "scope" => "read write"
+        "scope" => "read"
     });
     my $content = $response->decoded_content();
 
@@ -40,11 +40,10 @@ sub get_token_from_idsvr {
 
 __DATA__
 
-
-=== TEST SCOPE_1: Correct scope is accepted when configured
-####################################################################
-# The plugin correctly matches a single scope against the JWT scopes
-####################################################################
+=== TEST_SCHEME_1: An opaque bearer token can be introspected for a phantom token
+########################################################
+# The happy case works as expected when you set a scheme
+########################################################
 
 --- http_config
 lua_shared_dict phantom-token 10m;
@@ -59,7 +58,7 @@ location /t {
             client_id = 'introspection-client',
             client_secret = 'secret2',
             token_cache_seconds = 900,
-            scope = 'read'
+            scheme = 'Bearer'
         }
 
         local phantomToken = require 'phantom-token'
@@ -79,15 +78,15 @@ location /target {
 GET /t
 
 --- more_headers eval
-"Authorization: bearer " . $main::token
+"Authorization: bearer " . $main::token;
 
 --- response_headers_like
 authorization: Bearer ey.*
 
-=== TEST SCOPE_2: Correct scopes are accepted when configured
-#####################################################################
-# The plugin correctly matches multiple scopes against the JWT scopes
-#####################################################################
+=== TEST_SCHEME_2: Sending an invalid bearer token that fails introspection results in an access denied error
+#########################################################
+# An unrecognised token is rejected when you set a scheme
+#########################################################
 
 --- http_config
 lua_shared_dict phantom-token 10m;
@@ -102,7 +101,51 @@ location /t {
             client_id = 'introspection-client',
             client_secret = 'secret2',
             token_cache_seconds = 900,
-            scope = 'read write'
+            scheme = 'Bearer'
+        }
+
+        local phantomToken = require 'phantom-token'
+        phantomToken.run(config)
+    }
+}
+
+--- more_headers 
+Authorization: bearer zort
+
+--- request
+GET /t
+
+--- error_code: 401
+
+--- response_headers
+content-type: application/json
+
+--- response_headers_like
+WWW-Authenticate: ^Bearer
+
+--- response_body_like chomp
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}
+
+=== TEST_SCHEME_3: An opaque DPoP token can be introspected for a JWT
+#############################################################
+# The happy case works as expected when you set a DPoP scheme
+#############################################################
+
+--- http_config
+lua_shared_dict phantom-token 10m;
+
+--- config
+location /t {
+
+    set $original_access_token "";
+    access_by_lua_block {
+
+        local config = {
+            introspection_endpoint = 'http://127.0.0.1:8443/oauth/v2/oauth-introspect',
+            client_id = 'introspection-client',
+            client_secret = 'secret2',
+            token_cache_seconds = 900,
+            scheme = 'DPoP'
         }
 
         local phantomToken = require 'phantom-token'
@@ -122,12 +165,15 @@ location /target {
 GET /t
 
 --- more_headers eval
-"Authorization: bearer " . $main::token
+"Authorization: dpop " . $main::token;
 
-=== TEST SCOPE_3: Access token with invalid scopes is rejected
-#####################################################################
-# The plugin correctly detects missing scopes in the JWT access token
-#####################################################################
+--- response_headers_like
+authorization: DPoP ey.*
+
+=== TEST_SCHEME_4: Sending an invalid DPoP token that fails introspection results in an access denied error
+##############################################################
+# An unrecognised token is rejected when you set a DPoP scheme
+##############################################################
 
 --- http_config
 lua_shared_dict phantom-token 10m;
@@ -142,7 +188,7 @@ location /t {
             client_id = 'introspection-client',
             client_secret = 'secret2',
             token_cache_seconds = 900,
-            scope = 'read execute'
+            scheme = 'DPoP'
         }
 
         local phantomToken = require 'phantom-token'
@@ -150,13 +196,19 @@ location /t {
     }
 }
 
---- error_code: 403
+--- more_headers 
+Authorization: dpop zort
 
 --- request
 GET /t
 
---- more_headers eval
-"Authorization: bearer " . $main::token
+--- error_code: 401
+
+--- response_headers
+content-type: application/json
+
+--- response_headers_like
+WWW-Authenticate: ^DPoP
 
 --- response_body_like chomp
-{"code":"forbidden","message":"The token does not contain the required scope"}
+{"code":"invalid_token","message":"Missing, invalid or expired access token"}

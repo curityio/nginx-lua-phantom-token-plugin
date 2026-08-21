@@ -151,6 +151,8 @@
                 <id>default-datasource</id>
                 <jdbc xmlns="https://curity.se/ns/ext-conf/jdbc">
                     <connection-string>jdbc:hsqldb:file:${se.curity:identity-server:db};ifexists=true;hsqldb.lock_file=false</connection-string>
+                    <standard-credentials-mode>
+                    </standard-credentials-mode>
                     <driver>org.hsqldb.jdbc.JDBCDriver</driver>
                     <username>SA</username>
                 </jdbc>

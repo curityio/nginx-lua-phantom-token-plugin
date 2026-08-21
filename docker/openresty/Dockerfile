@@ -1,4 +1,4 @@
-FROM openresty/openresty:1.21.4.1-bionic
+FROM openresty/openresty:1.31.1.1-bookworm-fat
 
 # Deploy the plugin and dependencies for local testing
 COPY ./lua*.rockspec     /tmp/phantom-token/

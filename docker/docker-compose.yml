@@ -4,7 +4,7 @@ services:
   # Use Kong Open Source as the reverse proxy when the kong profile is set on the command line
   #
   kong:
-    image: custom_kong:3.0.0-alpine
+    image: custom_kong:3.9.0-ubuntu
     hostname: kongserver
     ports:
       - 3000:3000
@@ -24,7 +24,7 @@ services:
   # Use OpenResty as the reverse proxy when the openresty profile is set on the command line
   #
   openresty:
-    image: custom_openresty:1.21.4.1-bionic
+    image: custom_openresty:1.31.1.1-bookworm
     hostname: openrestyserver
     ports:
       - 3000:3000
@@ -49,7 +49,7 @@ services:
   # The Curity Identity Server is deployed for all test configurations
   #
   curity:
-    image: curity.azurecr.io/curity/idsvr
+    image: curity.azurecr.io/curity/idsvr:latest
     hostname: curityserver
     ports:
       - 6749:6749

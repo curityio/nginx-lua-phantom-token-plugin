@@ -37,35 +37,9 @@ local function array_has_value(arr, val)
 end
 
 --
--- Verify configuration and set defaults that are the same for all requests
---
-local function initialize_configuration(config)
-
-    if config                          == nil or
-       config.introspection_endpoint   == nil or
-       config.client_id                == nil or
-       config.client_secret            == nil then
-         ngx.log(ngx.WARN, 'The phantom token configuration is invalid and must be corrected')
-         return false
-    end
-
-    if config.token_cache_seconds == nil or config.token_cache_seconds <= 0 then
-        config.token_cache_seconds = 300
-    end
-    if config.scope == nil then
-        config.scope = ''
-    end
-    if config.verify_ssl == nil then
-        config.verify_ssl = true
-    end
-
-    return true
-end
-
---
 -- Return errors due to invalid tokens or introspection technical problems
 --
-local function error_response(status, code, message)
+local function error_response(scheme, status, code, message)
 
     local method = ngx.req.get_method():upper()
     if method ~= 'HEAD' then
@@ -73,7 +47,7 @@ local function error_response(status, code, message)
         ngx.status = status
         ngx.header['content-type'] = 'application/json'
         if status == 401 then
-            ngx.header['WWW-Authenticate'] = 'Bearer'
+            ngx.header['WWW-Authenticate'] = string.format('%s error="%s", error_description="%s"', scheme, code, message)
         end
         
         local jsonData = '{"code":"' .. code .. '","message":"' .. message .. '"}'
@@ -86,12 +60,12 @@ end
 --
 -- Return a generic message for all three of these error categories
 --
-local function unauthorized_error_response()
-    error_response(ngx.HTTP_UNAUTHORIZED, 'unauthorized', 'Missing, invalid or expired access token')
+local function unauthorized_error_response(scheme)
+    error_response(scheme, ngx.HTTP_UNAUTHORIZED, 'invalid_token', 'Missing, invalid or expired access token')
 end
 
-local function server_error_response(config)
-    error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered processing the request')
+local function server_error_response()
+    error_response('', ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered processing the request')
 end
 
 --
@@ -224,45 +198,101 @@ local function verify_access_token(access_token, config)
 end
 
 --
+-- Apply default configuration settings, e.g. when running in OpenResty
+--
+local function apply_default_configuration(config)
+
+    if config.token_cache_seconds == nil or config.token_cache_seconds <= 0 then
+        config.token_cache_seconds = 300
+    end
+
+    if config.verify_ssl == nil then
+        config.verify_ssl = true
+    end
+
+    if not config.scheme then
+        config.scheme = "Bearer"
+    end
+end
+
+--
+-- Validate incorrect configuration before running in OpenResty
+--
+function _M.validate(config)
+
+    if not config then
+        return nil, "The phantom token plugin requires configuration"
+    end
+
+    if not config.client_id then
+        return nil, "The phantom token plugin requires a client_id parameter"
+    end
+
+    if not config.client_secret then
+        return nil, "The phantom token plugin requires a client_secret parameter"
+    end
+
+    if not config.introspection_endpoint or not config.introspection_endpoint:match("^https?://") then
+        return nil, "The phantom token plugin requires an introspection endpoint that starts with http:// or https://"
+    end
+
+    if config.scheme and config.scheme ~= "Bearer" and config.scheme ~= "DPoP" then
+        return nil, "The phantom token plugin requires a scheme of Bearer or DPoP"
+    end
+
+    return true
+end
+
+--
 -- The public entry point to introspect the token then forward the JWT to the API
 --
 function _M.run(config)
-
-    -- Start by validating configuration
-    if initialize_configuration(config) == false then 
-        server_error_response(config)
-        return
-    end
 
     if ngx.req.get_method() == 'OPTIONS' then
         return
     end
 
+    apply_default_configuration(config)
+
     local auth_header = ngx.req.get_headers()['Authorization']
-    if auth_header and string.len(auth_header) > 7 and string.lower(string.sub(auth_header, 1, 7)) == 'bearer ' then
+    if not auth_header then
+        ngx.log(ngx.WARN, 'No HTTP Authorization header was found')
+        unauthorized_error_response(config.scheme)
+    end
 
-        local access_token_untrimmed = string.sub(auth_header, 8)
-        local access_token = string.gsub(access_token_untrimmed, "%s+", "")
-        local result = verify_access_token(access_token, config)
-    
-        if result.status == 500 then
-            error_response(ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered authorizing the HTTP request')
-        end
+    -- Read either an Authorization: Bearer or Authorization: DPoP value
+    local scheme, access_token = auth_header:match("^%s*(%S+)%s+(.+)%s*$")
+    if not scheme or scheme:lower() ~= config.scheme:lower() then
+        ngx.log(ngx.WARN, 'No valid scheme was found in the HTTP Authorization header')
+        unauthorized_error_response(config.scheme)
+    end
 
-        if result.status == 403 then
-            error_response(ngx.HTTP_FORBIDDEN, 'forbidden', 'The token does not contain the required scope')
-        end
-
-        if result.status ~= 200 then
-            ngx.log(ngx.WARN, 'Received a ' .. result.status .. ' introspection response due to the access token being invalid or expired')
-            unauthorized_error_response()
-        end
-
-        ngx.req.set_header('Authorization', 'Bearer ' .. result.jwt)
-    else
-
+    if not access_token then
         ngx.log(ngx.WARN, 'No valid access token was found in the HTTP Authorization header')
-        unauthorized_error_response()
+        unauthorized_error_response(config.scheme)
+    end
+
+    local result = verify_access_token(access_token, config)
+
+    if result.status == 500 then
+        error_response(config.scheme, ngx.HTTP_INTERNAL_SERVER_ERROR, 'server_error', 'Problem encountered authorizing the HTTP request')
+    end
+
+    if result.status == 403 then
+        error_response(config.scheme, ngx.HTTP_FORBIDDEN, 'forbidden', 'The token does not contain the required scope')
+    end
+
+    if result.status ~= 200 then
+        ngx.log(ngx.WARN, 'Received a ' .. result.status .. ' introspection response due to the access token being invalid or expired')
+        unauthorized_error_response(config.scheme)
+    end
+
+    -- Pass the JWT to the next stage for processing
+    ngx.req.set_header('Authorization', config.scheme .. ' ' .. result.jwt)
+
+    -- For DPoP, make the original opaque access token available in a variable, to enable verification of the DPoP ath claim
+    if config.scheme == 'DPoP' then
+        ngx.var.original_access_token = access_token
     end
 end
 
