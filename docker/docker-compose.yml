@@ -34,6 +34,22 @@ services:
       - openresty
 
   #
+  # Use APISIX as the reverse proxy when the apisix profile is set on the command line
+  #
+  apisix:
+    image: custom_apisix:3.14.0-debian
+    hostname: apisixserver
+    volumes:
+      - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml
+      - ./apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
+    ports:
+      - 3000:3000
+    depends_on:
+      - business-api
+    profiles:
+      - apisix
+
+  #
   # A tiny API as a target for testing routing
   #
   business-api:
@@ -44,6 +60,7 @@ services:
     profiles:
       - kong
       - openresty
+      - apisix
 
   #
   # The Curity Identity Server is deployed for all test configurations

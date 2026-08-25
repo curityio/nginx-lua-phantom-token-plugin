@@ -1,4 +1,6 @@
-FROM node:16.6.0-alpine
+FROM node:24-trixie-slim
+
 WORKDIR /usr/api
 COPY docker/api/api.js /usr/api
+
 CMD ["node", "api.js"]

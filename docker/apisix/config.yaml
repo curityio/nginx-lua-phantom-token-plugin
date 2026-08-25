@@ -1,0 +1,13 @@
+apisix:
+  node_listen:
+    - port: 3000
+
+deployment:
+  role: data_plane
+  role_data_plane:
+    config_provider: yaml
+
+nginx_config:
+  http:
+    custom_lua_shared_dict:
+      phantom-token: 10m

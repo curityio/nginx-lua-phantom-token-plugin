@@ -14,8 +14,8 @@ cd ..
 # Get command line arguments
 #
 PROFILE=$1
-if [ "$PROFILE" != 'openresty' ] && [ "$PROFILE" != 'kong' ] && [ "$PROFILE" != 'test' ]; then
-  echo "Please specify 'openresty', 'kong' or 'test' as a command line parameter"
+if [ "$PROFILE" != 'openresty' ] && [ "$PROFILE" != 'kong' ] && [ "$PROFILE" != 'apisix' ] && [ "$PROFILE" != 'test' ]; then
+  echo "Please specify 'openresty', 'kong', 'apisix' or 'test' as a command line parameter"
   exit 1
 fi
 
@@ -23,16 +23,12 @@ fi
 # Prompt if required, and expand relative paths such as those containing ~
 #
 ADMIN_PASSWORD=Password1
-if [ "$LICENSE_FILE_PATH" == '' ]; then
-  read -t 60 -p 'Enter the path to the license file for the Curity Identity Server: ' LICENSE_FILE_PATH || :
-fi
-LICENSE_FILE_PATH=$(eval echo "$LICENSE_FILE_PATH")
 
 #
 # Check we have valid data before proceeding
 #
 if [ ! -f "$LICENSE_FILE_PATH" ]; then
-  echo 'A valid LICENSE_FILE_PATH parameter was not supplied'
+  echo 'A valid LICENSE_FILE_PATH environment variable was not supplied'
   exit 1
 fi
 LICENSE_KEY=$(cat "$LICENSE_FILE_PATH" | jq -r .License)
@@ -47,6 +43,10 @@ fi
 if [ "$PROFILE" == 'kong' ]; then
   
   docker build -f docker/kong/Dockerfile --no-cache -t custom_kong:3.9.0-ubuntu .
+
+elif [ "$PROFILE" == 'apisix' ]; then
+
+  docker build -f docker/apisix/Dockerfile --no-cache -t custom_apisix:3.14.0-debian .
 
 elif [ "$PROFILE" == 'openresty' ]; then
 
