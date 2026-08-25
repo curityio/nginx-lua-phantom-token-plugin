@@ -27,7 +27,6 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    
     ["apisix.plugins.phantom-token.apisix"] = "plugin/apisix.lua",
     ["apisix.plugins.phantom-token.access"]  = "plugin/access.lua"
   }
